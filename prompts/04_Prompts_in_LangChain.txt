@@ -1,0 +1,765 @@
+**Prompts in LangChain**
+
+CampusX – Nitish Singh
+
+26 February 2025 · Video 04
+
+[Original video](https://www.youtube.com/watch?v=3TGqlQxpuU0\&utm_source=chatgpt.com)
+
+## **1. Introduction: What are Prompts?**
+
+A prompt is an instruction or input provided to a Large Language Model (LLM) to perform a particular task.
+
+For example:
+
+```
+Explain machine learning in simple language.
+```
+
+The prompt tells the model what it needs to do.
+
+However, consider this prompt:
+
+```
+You are an experienced machine learning instructor.
+
+Explain machine learning to a beginner.
+Use simple language.
+Provide two real-world examples.
+Keep the explanation within 200 words.
+```
+
+This prompt provides much more information about:
+
+- The role the model should adopt.
+- The task it should perform.
+- The target audience.
+- The expected output format.
+- The response length.
+
+The quality and clarity of instructions influence the usefulness of the generated response.
+
+### **Why are prompts important in LLM applications?**
+
+Suppose we are developing a customer-support chatbot.
+
+Different users might ask:
+
+- Explain your refund policy.
+- How can I return a product?
+- What is the refund procedure?
+
+We want the LLM to respond consistently, follow company policies, and use a suitable tone.
+
+Prompts help us define these instructions.
+
+**Key takeaway:** A prompt is the communication mechanism through which an application tells an LLM what task to perform and how to perform it.
+
+## **2. Types of Prompts: Static vs Dynamic**
+
+Prompts can broadly be classified into two types.
+
+### **2.1 Static Prompts**
+
+A static prompt is a predefined instruction that remains unchanged every time the application executes it.
+
+Example:
+
+```
+from langchain_openai import ChatOpenAImodel = ChatOpenAI(    model="gpt-4o-mini",    temperature=0.3)prompt = """Explain the concept of Machine Learningin simple language."""response = model.invoke(prompt)print(response.content)
+```
+
+Here, the prompt is hardcoded.
+
+Every time the application runs this instruction, it asks the model to explain machine learning.
+
+**Limitations:**
+
+Imagine that we develop an educational application where users can select any topic.
+
+A static prompt would require us to modify the prompt manually for every topic.
+
+This is not scalable.
+
+### **2.2 Dynamic Prompts**
+
+A dynamic prompt is an instruction containing variables whose values can be supplied at runtime.
+
+For example:
+
+```
+topic = "Cryptography"style = "Beginner-friendly"prompt = f"""Explain {topic} in {style} language."""response = model.invoke(prompt)print(response.content)
+```
+
+Here, `topic` and `style` are dynamic variables.
+
+The application can accept different values from different users.
+
+For example:
+
+| User   | Topic            | Style             |
+| ------ | ---------------- | ----------------- |
+| User 1 | Cryptography     | Beginner-friendly |
+| User 2 | Machine Learning | Technical         |
+| User 3 | Deep Learning    | Mathematical      |
+
+The same prompt structure can serve all three users.
+
+**Static vs Dynamic Prompts**
+
+**Static**
+
+Fixed instructions
+
+Same prompt every time
+
+**Dynamic**
+
+Variable instructions
+
+Changes with runtime inputs
+
+**When should we use dynamic prompts?**
+
+- Personalized chatbots.
+- Educational assistants.
+- Customer-support systems.
+- Content generation applications.
+- AI agents.
+- Automated report generation.
+
+## **3. PromptTemplate in LangChain**
+
+We have already seen that Python f-strings can create dynamic prompts.
+
+So, why does LangChain provide `PromptTemplate`?
+
+Consider an application with many prompts and multiple input variables.
+
+Managing all the prompt construction manually can become difficult.
+
+LangChain provides `PromptTemplate` to create reusable and structured prompt templates.
+
+### **3.1 Creating a PromptTemplate**
+
+```
+from langchain_core.prompts import PromptTemplatetemplate = PromptTemplate.from_template(    "Explain {topic} in {style} language.")
+```
+
+Here:
+
+- `template` contains the reusable prompt structure.
+- `{topic}` is a placeholder.
+- `{style}` is another placeholder.
+
+### **3.2 Supplying values to the template**
+
+```
+prompt = template.invoke({    "topic": "Cryptography",    "style": "simple"})print(prompt)
+```
+
+The resulting prompt is:
+
+```
+Explain Cryptography in simple language.
+```
+
+Notice that `invoke()` fills the template variables and returns a prompt value.
+
+You can then pass it to a model:
+
+```
+response = model.invoke(prompt)print(response.content)
+```
+
+### **3.3 Understanding input_variables**
+
+You can also explicitly define the variables required by a template.
+
+```
+template = PromptTemplate(    template="Explain {topic} in {style} language.",    input_variables=["topic", "style"])
+```
+
+The `input_variables` parameter identifies the values expected by the template.
+
+If a required variable is missing, the template cannot be formatted successfully.
+
+### **3.4 PromptTemplate vs Python f-strings**
+
+| Feature               | Python f-string  | LangChain PromptTemplate |
+| --------------------- | ---------------- | ------------------------ |
+| Dynamic values        | Yes              | Yes                      |
+| Reusable template     | Possible         | Built-in abstraction     |
+| Required variables    | Manually managed | Explicitly represented   |
+| LangChain integration | Manual           | Native                   |
+| Chain integration     | Manual           | Convenient               |
+
+**Important:** PromptTemplate does not make an LLM inherently more intelligent. It helps organize, validate and reuse instructions.
+
+## **4. Understanding Messages in Chat Models**
+
+Until now, we have mainly passed plain text to language models.
+
+However, conversational models work with structured messages.
+
+Consider this conversation:
+
+```
+User: What is AES?
+
+AI: AES is a symmetric encryption algorithm.
+
+User: What are its key sizes?
+
+AI: AES supports 128, 192 and 256-bit keys.
+```
+
+The model should distinguish between the messages sent by the user and the responses generated by the AI.
+
+LangChain provides different message types for this purpose.
+
+### **4.1 SystemMessage**
+
+A SystemMessage contains instructions that guide the model's behaviour.
+
+Example:
+
+```
+from langchain_core.messages import SystemMessagesystem_message = SystemMessage(    content="You are an experienced cryptography instructor.")
+```
+
+It establishes the assistant's role and behavioural instructions.
+
+Typical uses:
+
+- Define the assistant's role.
+- Specify the expected response style.
+- Establish task constraints.
+- Provide application-level instructions.
+
+### **4.2 HumanMessage**
+
+A HumanMessage represents input from the user.
+
+```
+from langchain_core.messages import HumanMessagehuman_message = HumanMessage(    content="Explain AES encryption.")
+```
+
+### **4.3 AIMessage**
+
+An AIMessage represents the response generated by the model.
+
+```
+from langchain_core.messages import AIMessageai_message = AIMessage(    content="AES is a symmetric encryption algorithm.")
+```
+
+### **4.4 Comparing the three message types**
+
+| Message       | Responsibility                    |
+| ------------- | --------------------------------- |
+| SystemMessage | Instructions from the application |
+| HumanMessage  | Input from the user               |
+| AIMessage     | Response from the AI              |
+
+### **4.5 Sending structured messages to a model**
+
+```
+messages = [    SystemMessage(        content="You are a cryptography instructor."    ),    HumanMessage(        content="Explain AES encryption."    )]response = model.invoke(messages)print(response.content)
+```
+
+The chat model receives a sequence of messages rather than a single plain-text instruction.
+
+**Important distinction:** SystemMessage, HumanMessage and AIMessage are message objects. They are not separate AI models.
+
+## **5. ChatPromptTemplate**
+
+So far, we have used `PromptTemplate` to construct dynamic text prompts.
+
+But what if we want to construct a conversation containing multiple message types?
+
+For example:
+
+- A system instruction.
+- Previous conversation history.
+- A new user question.
+
+We could manually create a list of messages, but LangChain provides a more convenient abstraction called `ChatPromptTemplate`.
+
+### **5.1 Creating a ChatPromptTemplate**
+
+```
+from langchain_core.prompts import ChatPromptTemplatechat_template = ChatPromptTemplate.from_messages([    ("system", "You are a helpful Python instructor."),    ("human", "Explain {topic} in simple language.")])
+```
+
+Notice the difference:
+
+With `PromptTemplate`, we create a reusable text prompt.
+
+With `ChatPromptTemplate`, we create a reusable sequence of conversational messages.
+
+### **5.2 Supplying dynamic values**
+
+```
+prompt = chat_template.invoke({    "topic": "List Comprehension"})print(prompt)
+```
+
+Conceptually, the resulting message sequence looks like:
+
+```
+SystemMessage:
+You are a helpful Python instructor.
+
+HumanMessage:
+Explain List Comprehension in simple language.
+```
+
+We can now pass it to our chat model.
+
+```
+response = model.invoke(prompt)print(response.content)
+```
+
+### **5.3 Using ChatPromptTemplate with multiple variables**
+
+We can also introduce multiple dynamic variables.
+
+```
+chat_template = ChatPromptTemplate.from_messages([    ("system", "You are an expert {domain} instructor."),    (        "human",        "Explain {topic} for a {level} student."    )])prompt = chat_template.invoke({    "domain": "Cybersecurity",    "topic": "AES Encryption",    "level": "beginner"})response = model.invoke(prompt)print(response.content)
+```
+
+The same template can now be reused for different domains, topics and student levels.
+
+### **5.4 PromptTemplate vs ChatPromptTemplate**
+
+| PromptTemplate                     | ChatPromptTemplate                              |
+| ---------------------------------- | ----------------------------------------------- |
+| Creates text prompts               | Creates conversational message sequences        |
+| Suitable for plain text LLM input  | Suitable for chat models                        |
+| Uses placeholders                  | Uses placeholders and message roles             |
+| Returns a string-like prompt value | Returns a chat prompt value containing messages |
+
+**Remember:** ChatPromptTemplate is especially useful when building chatbots because conversational applications frequently need system instructions, user inputs and conversation history.
+
+## **6. MessagesPlaceholder**
+
+Critical for our chatbot hands-on
+
+This is probably the most important concept from this video for the application we are planning to build.
+
+First, understand the problem.
+
+### **6.1 The problem: Maintaining conversation context**
+
+Consider this conversation:
+
+```
+User: What is AES?
+
+AI: AES is a symmetric encryption algorithm.
+
+User: What are its key sizes?
+
+AI: AES supports 128, 192 and 256-bit keys.
+
+User: Which one is the largest?
+```
+
+The final question is dependent on the previous conversation.
+
+If we send only:
+
+```
+response = model.invoke(    "Which one is the largest?")
+```
+
+The model may not understand what "one" refers to.
+
+Why?
+
+Because independent model invocations generally do not automatically retain the previous API calls.
+
+We need to supply the conversation history.
+
+### **6.2 Maintaining conversation history manually**
+
+LangChain allows us to represent conversation history using message objects.
+
+```
+from langchain_core.messages import (    HumanMessage,    AIMessage)chat_history = [    HumanMessage(content="What is AES?"),    AIMessage(        content="AES is a symmetric encryption algorithm."    ),    HumanMessage(        content="What are its key sizes?"    ),    AIMessage(        content="AES supports 128, 192 and 256-bit keys."    )]
+```
+
+Now the model can receive this history:
+
+```
+response = model.invoke(    chat_history + [        HumanMessage(            content="Which one is the largest?"        )    ])print(response.content)
+```
+
+The model has the context required to understand the question.
+
+### **6.3 What is MessagesPlaceholder?**
+
+Manually constructing a complete message sequence every time can become cumbersome.
+
+This is where `MessagesPlaceholder` comes in.
+
+It provides a placeholder inside a `ChatPromptTemplate` where a list of messages can be inserted dynamically.
+
+Example:
+
+```
+from langchain_core.prompts import (    ChatPromptTemplate,    MessagesPlaceholder)chat_template = ChatPromptTemplate.from_messages([    (        "system",        "You are an experienced cryptography instructor."    ),    MessagesPlaceholder(        variable_name="chat_history"    ),    (        "human",        "{input}"    )])
+```
+
+Let's understand its structure.
+
+| Component           | Purpose                            |
+| ------------------- | ---------------------------------- |
+| System message      | Defines assistant behaviour        |
+| MessagesPlaceholder | Inserts previous conversation      |
+| Human message       | Contains the current user question |
+
+### **6.4 Invoking the template**
+
+```
+prompt = chat_template.invoke({    "chat_history": chat_history,    "input": "Which one is the largest?"})response = model.invoke(prompt)print(response.content)
+```
+
+The resulting conversation is conceptually:
+
+```
+System:
+You are an experienced cryptography instructor.
+
+Human:
+What is AES?
+
+AI:
+AES is a symmetric encryption algorithm.
+
+Human:
+What are its key sizes?
+
+AI:
+AES supports 128, 192 and 256-bit keys.
+
+Human:
+Which one is the largest?
+```
+
+The LLM receives the complete context.
+
+**How MessagesPlaceholder works**
+
+**System Instructions**
+
+Fixed application instructions
+
+**MessagesPlaceholder**
+
+Dynamically inserted chat history
+
+**Current Human Message**
+
+New question from the user
+
+Complete prompt sent to Chat Model
+
+### **6.5 Optional MessagesPlaceholder**
+
+Sometimes, you may want to allow an empty conversation history.
+
+You can use:
+
+```
+MessagesPlaceholder(    variable_name="chat_history",    optional=True)
+```
+
+This allows the placeholder to be omitted when no previous messages exist.
+
+**Important distinction:**
+
+MessagesPlaceholder does not store conversation history.
+
+It only inserts the history supplied by your application.
+
+Your application is responsible for maintaining that history.
+
+## **7. Complete example: Context-aware chatbot**
+
+Let's combine everything we have learned.
+
+The following example demonstrates a simple command-line chatbot.
+
+### **Step 1: Initialize the chat model**
+
+```
+from langchain_openai import ChatOpenAImodel = ChatOpenAI(    model="gpt-4o-mini",    temperature=0.3)
+```
+
+### **Step 2: Create the chat prompt**
+
+```
+from langchain_core.prompts import (    ChatPromptTemplate,    MessagesPlaceholder)chat_template = ChatPromptTemplate.from_messages([    (        "system",        "You are a helpful cybersecurity instructor. "        "Explain concepts clearly with practical examples."    ),    MessagesPlaceholder(        variable_name="chat_history"    ),    ("human", "{input}")])
+```
+
+### **Step 3: Initialize conversation history**
+
+```
+chat_history = []
+```
+
+Initially, there are no previous messages.
+
+### **Step 4: Create the conversation loop**
+
+```
+while True:    user_input = input("You: ")    if user_input.lower() == "exit":        break    prompt = chat_template.invoke({        "chat_history": chat_history,        "input": user_input    })    response = model.invoke(prompt)    print("AI:", response.content)    # Save the current interaction    chat_history.append(        HumanMessage(content=user_input)    )    chat_history.append(response)
+```
+
+Remember to import `HumanMessage`:
+
+```
+from langchain_core.messages import HumanMessage
+```
+
+### **Step 5: Understand the execution**
+
+Suppose you enter:
+
+```
+You: What is AES?
+```
+
+The application sends:
+
+```
+System: You are a helpful cybersecurity instructor.
+
+Human: What is AES?
+```
+
+After receiving the response, the application stores both messages.
+
+Now enter:
+
+```
+You: What are its key sizes?
+```
+
+The application sends:
+
+```
+System: You are a helpful cybersecurity instructor.
+
+Human: What is AES?
+
+AI: AES is a symmetric encryption algorithm.
+
+Human: What are its key sizes?
+```
+
+The model can now understand the reference to AES.
+
+### **Important limitations**
+
+- The history above is stored only in Python memory.
+- Restarting the program clears the history.
+- Every new request sends the accumulated history again.
+- Long conversations increase token usage and may exceed the model's context window.
+
+For larger applications, you may need persistent conversation storage and conversation-history management.
+
+## **8. Important differences to remember**
+
+These concepts can be confusing initially, so keep this comparison table for revision.
+
+| Concept             | Main responsibility                       |
+| ------------------- | ----------------------------------------- |
+| Static Prompt       | Fixed instruction                         |
+| Dynamic Prompt      | Instruction with runtime variables        |
+| PromptTemplate      | Creates reusable text prompts             |
+| ChatPromptTemplate  | Creates structured conversational prompts |
+| SystemMessage       | Provides application instructions         |
+| HumanMessage        | Represents user input                     |
+| AIMessage           | Represents model response                 |
+| MessagesPlaceholder | Inserts supplied conversation history     |
+
+### **A common confusion: PromptTemplate vs MessagesPlaceholder**
+
+Consider this:
+
+```
+PromptTemplate(    template="Explain {topic}")
+```
+
+Here, `{topic}` represents a variable that will be replaced with a string.
+
+Now consider:
+
+```
+MessagesPlaceholder(    variable_name="chat_history")
+```
+
+Here, `chat_history` represents a sequence of message objects, not just an ordinary text variable.
+
+That is the fundamental difference.
+
+## **9. How these concepts work together**
+
+Let's visualize the complete flow of a context-aware chatbot.
+
+**User Input**
+
+Current question
+
+**ChatPromptTemplate**
+
+Defines the message structure
+
+**SystemMessage**
+
+Instructions
+
+**MessagesPlaceholder**
+
+Chat history
+
+**HumanMessage**
+
+Current user question
+
+**Chat Model**
+
+Processes the complete conversation
+
+**AIMessage**
+
+Generated response
+
+**Update Chat History**
+
+Save HumanMessage and AIMessage for the next turn
+
+This is the foundation of a conversational application.
+
+## **10. Important practical applications**
+
+The concepts covered in this video are useful in several applications.
+
+| Application                       | Relevant concepts                       |
+| --------------------------------- | --------------------------------------- |
+| Customer support chatbot          | ChatPromptTemplate, MessagesPlaceholder |
+| Educational assistant             | Dynamic prompts, PromptTemplate         |
+| Cybersecurity assistant           | SystemMessage, ChatPromptTemplate       |
+| Personalized writing assistant    | Dynamic prompts                         |
+| Conversational research assistant | Chat history, MessagesPlaceholder       |
+| Multi-turn AI assistant           | All major chat prompt components        |
+
+## **11. Common mistakes and things to remember**
+
+1\. **Confusing prompts with models:** A prompt provides instructions; the model processes them and generates a response.
+
+2\. **Assuming chat models remember everything:** Previous messages must be supplied or managed by your application.
+
+3\. **Confusing PromptTemplate with ChatPromptTemplate:** One creates text prompts; the other creates structured message sequences.
+
+4\. **Assuming MessagesPlaceholder stores history:** It only inserts messages supplied by your application.
+
+5\. **Ignoring conversation length:** Sending the entire conversation repeatedly can increase token consumption.
+
+6\. **Using overly complicated prompts:** Clear, specific and well-structured instructions are generally preferable.
+
+## **12. Video timeline for revision**
+
+The original video's chapters provide a useful way to revisit particular concepts.
+
+| Timestamp | Topic                     |
+| --------- | ------------------------- |
+| 00:00     | Introduction              |
+| 01:00     | Recap                     |
+| 02:17     | Error correction          |
+| 06:17     | Introduction to prompts   |
+| 10:30     | Static vs Dynamic prompts |
+| 27:05     | PromptTemplate            |
+| 36:49     | Messages                  |
+| 56:31     | ChatPromptTemplate        |
+| 01:06:37  | MessagesPlaceholder       |
+
+Source: [CampusX – Prompts in LangChain, Video 04](https://www.youtube.com/watch?v=3TGqlQxpuU0\&utm_source=chatgpt.com).
+
+## **13. Quick knowledge check**
+
+Try answering these questions when revisiting your notes.
+
+**Revision quiz**
+
+0/5 answered
+
+**1. Which component is used to create reusable dynamic text prompts?**
+
+ChatPromptTemplate
+
+PromptTemplate
+
+MessagesPlaceholder
+
+
+
+**2. Which message type represents instructions from the application?**
+
+HumanMessage
+
+AIMessage
+
+SystemMessage
+
+
+
+**3. What does ChatPromptTemplate return?**
+
+A structured chat prompt containing messages
+
+A numerical embedding
+
+A vector database
+
+
+
+**4. Does MessagesPlaceholder store conversation history?**
+
+Yes, permanently
+
+No, it inserts supplied messages into a prompt
+
+Yes, but only for OpenAI
+
+
+
+**5. What must an application do to maintain conversational context?**
+
+Increase temperature
+
+Supply and manage previous messages
+
+Use embedding dimensions of 300
+
+
+
+Submit answers
+
+## **14. Connection to our learning journey**
+
+We've now covered four major areas:
+
+1. LangChain introduction and purpose.
+2. LangChain components and architecture.
+3. Models, chat models and embedding models.
+4. Prompts, templates and conversational history.
+
+Our hands-on exercises so far:
+
+- Semantic Similarity API using Flask, LangChain and OpenAI embeddings.
+- Next: Context-aware Cybersecurity Chatbot using ChatPromptTemplate and MessagesPlaceholder.
+
+**recommendation for  revision:** Pay particular attention to Sections 3, 4, 5, 6 and 7. These contain the most important implementation concepts.
+
