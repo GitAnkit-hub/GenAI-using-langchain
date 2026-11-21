@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import similarity
+import Projects.SemanticSimilarityAPI.similarity as similarity
 app = Flask(__name__)
 
 @app.route('/')
