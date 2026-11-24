@@ -1,6 +1,6 @@
 # from fastapi import FastAPI
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
@@ -17,7 +17,7 @@ load_dotenv()
 #     pass
 
 
-model = ChatOpenAI(model='gpt-6-luna',max_completion_tokens=1000)
+model = ChatOpenAI(model='gpt-6-luna', max_completion_tokens=1000)
 
 # response1 = model.invoke("what is encryption?")
 # # response2 = model.invoke([
@@ -91,33 +91,55 @@ Rules:
 """
 
 
-chat_template = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_instruction),
-        MessagesPlaceholder(variable_name="chat_history")
-    ]
-)
+# chat_template = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", system_instruction),
+#         MessagesPlaceholder(variable_name="chat_history")
+#     ]
+# )
+
+# while True:
+#     query = input("Ask your cybersecurity question (type exit to quit): ")
+
+
+#     if(query.lower()=='exit'):
+#         break
+#     else:
+#         chat_history.append(HumanMessage(content=query))
+
+#     prompt = chat_template.invoke({"chat_history": chat_history})  # dictionary is taken as input
+    
+    # response = model.invoke(prompt)  # Returns AIMessage
+
+    # print(f"\n{response.content}")
+    # chat_history.append(response) # its better to have additional info to llm
+
+
+
+
+
+
+# we have not seen PromptTemplate
+
+template = PromptTemplate.from_template("Explain {algorithm} algorithm and its {purpose} using {language} lanuage.")
+
 
 while True:
-    query = input("Ask your cybersecurity question (type exit to quit): ")
+    algorithm = input("Enter An Algorithm: ")
+    purpose = input("choose between encryption, decryption and key exchange: ")
+    language = input(" choose b/w simple English and Hindi: ")
 
 
-    if(query.lower()=='exit'):
+
+    if algorithm.lower() == 'exit' or  purpose.lower() == 'exit' or language.lower() == 'exit':
         break
-    else:
-        chat_history.append(HumanMessage(content=query))
 
-    prompt = chat_template.invoke({"chat_history": chat_history})
-    
-    response = model.invoke(prompt)  # Returns AIMessage
-    
-    print(f"\n{response.content}")
-    chat_history.append(response) # its better to have additional info to llm
-
-
-
-
-
+    prompt = template.invoke({"algorithm": algorithm,
+                              "purpose":purpose,
+                              "language":language})
+    print(prompt.to_string())
+    response = model.invoke(prompt)
+    print(response.content)
 
 
 
