@@ -1,5 +1,6 @@
 # from fastapi import FastAPI
 from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
@@ -16,7 +17,7 @@ load_dotenv()
 #     pass
 
 
-model = ChatOpenAI(model='gpt-6-luna',max_completion_tokens=300)
+model = ChatOpenAI(model='gpt-6-luna',max_completion_tokens=1000)
 
 # response1 = model.invoke("what is encryption?")
 # # response2 = model.invoke([
@@ -41,18 +42,18 @@ model = ChatOpenAI(model='gpt-6-luna',max_completion_tokens=300)
 
 chat_history = []
 
-while True:
-    query = input("Enter your question to be asked from LLM?")
+# while True:
+#     query = input("Enter your question to be asked from LLM?")
 
 
-    if(query.lower()=='exit'):
-        break
-    else:
-        chat_history.append(HumanMessage(content=query))
+#     if(query.lower()=='exit'):
+#         break
+#     else:
+#         chat_history.append(HumanMessage(content=query))
 
-    response = model.invoke(chat_history)
-    print(response.content)
-    chat_history.append(response) # its better to have additional info to llm
+#     response = model.invoke(chat_history)
+#     print(response.content)
+#     chat_history.append(response) # its better to have additional info to llm
 
 
 
@@ -66,6 +67,52 @@ while True:
 
 # make the chatbot behave like a cybersecurity instructor rather than a general-purpose assistant.
 
+system_instruction = """
+You are an experienced cybersecurity instructor.
+
+Your scope is limited to:
+- Cybersecurity
+- Cryptography
+- Network security
+- Computer networks
+- Information security
+- Secure software development
+
+Rules:
+1. Answer questions related to the above topics.
+2. Explain technical concepts in simple language.
+3. Use practical examples wherever appropriate.
+4. Correct misconceptions politely.
+5. If the user asks something unrelated to these topics,
+   politely explain that you are a cybersecurity instructor
+   and cannot help with unrelated questions.
+6. You may use previous conversation history to understand
+   follow-up questions, such as "explain this further".
+"""
+
+
+chat_template = ChatPromptTemplate.from_messages(
+    [
+        ("system", system_instruction),
+        MessagesPlaceholder(variable_name="chat_history")
+    ]
+)
+
+while True:
+    query = input("Ask your cybersecurity question (type exit to quit): ")
+
+
+    if(query.lower()=='exit'):
+        break
+    else:
+        chat_history.append(HumanMessage(content=query))
+
+    prompt = chat_template.invoke({"chat_history": chat_history})
+    
+    response = model.invoke(prompt)  # Returns AIMessage
+    
+    print(f"\n{response.content}")
+    chat_history.append(response) # its better to have additional info to llm
 
 
 
