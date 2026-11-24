@@ -1,0 +1,7 @@
+* Why structured output? (00:00–11:40)
+LLMs need to communicate not only with humans but also with other software systems so a structured output is conveninet for every software to have communication.
+
+* Different ways to get structured output
+1. TypedDict -> 
+2. Pydantic ->
+3. 
